@@ -1,9 +1,12 @@
+export type FieldType = 'text' | 'email' | 'tel' | 'date' | 'checkbox' | 'radio' | 'select' | 'textarea' | 'signature'
+
 export interface FormField {
   id: string
   label: string
-  type: 'text' | 'email' | 'phone' | 'date' | 'checkbox' | 'radio' | 'select' | 'textarea' | 'signature'
+  type: FieldType
   required?: boolean
   placeholder?: string
+  value?: string | boolean | string[]
   options?: string[]
   validation?: {
     min?: number
