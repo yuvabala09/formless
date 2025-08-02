@@ -2,41 +2,33 @@ import { createWorker, PSM } from 'tesseract.js';
 import * as pdfjsLib from 'pdfjs-dist';
 
 // Set the worker source for PDF.js
-const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.entry');
 // @ts-ignore - pdf.js types are a bit wonky with workers
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 // Simple type for text items from PDF.js
 interface TextItem {
   str: string;
 }
 
-// Type for Tesseract progress messages
-interface TesseractProgress {
-  status: string;
-  progress: number;
-  userJobId: string;
-  jobId: string;
-  workerId: string;
-}
-
-// Create a worker instance with proper typing
+// Simple worker initialization with minimal configuration
 async function createTesseractWorker(onProgress?: (progress: number) => void) {
-  const worker = await createWorker({
-    logger: (m: TesseractProgress) => {
-      // Log progress if callback provided
-      if (m.status === 'recognizing text' && onProgress) {
+  // Create worker with minimal configuration
+  const worker = await createWorker();
+  
+  // Set up progress reporting if callback is provided
+  if (onProgress) {
+    // @ts-ignore - progress reporting is available but not in types
+    worker.onProgress = (m) => {
+      if (m.status === 'recognizing text') {
         onProgress(Math.round(m.progress * 100));
       }
-    },
-  });
+    };
+  }
   
-  await worker.loadLanguage('eng');
-  await worker.initialize('eng');
-  await worker.setParameters({
-    tessedit_pageseg_mode: PSM.AUTO_OSD,
-    preserve_interword_spaces: '1',
-  });
+  // Initialize with English language
+  await worker.load();
+  // Use reinitialize instead of initialize as it's the correct method name
+  await worker.reinitialize('eng');
   
   return worker;
 }
